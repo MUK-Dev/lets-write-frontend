@@ -3,7 +3,9 @@ import feathers from "@feathersjs/feathers";
 import socketio from "@feathersjs/socketio-client";
 import authentication from "@feathersjs/authentication-client";
 
-export const socket = io("http://localhost:3030", {
+import serverIP from "./serverIP";
+
+export const socket = io(`${serverIP}3030`, {
 	transports: ["websocket"],
 	forceNew: true,
 });

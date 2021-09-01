@@ -11,6 +11,7 @@ import SignupForm from "../../Components/SignupForm/SignupForm";
 import SideImage from "../../assets/sampleimg3.jpg";
 import GithubOAuth from "../../Components/GithubOAuth/GithubOAuth";
 import app from "../../feathers-client";
+import serverIP from "../../serverIP";
 
 const styles = (theme) => ({
 	root: {
@@ -115,7 +116,7 @@ class Signup extends Component {
 	};
 
 	receiveMessage(event) {
-		if (event.origin === "http://localhost:3030") {
+		if (event.origin === `${serverIP}3030`) {
 			app
 				.authenticate({
 					strategy: "jwt",
@@ -137,7 +138,7 @@ class Signup extends Component {
 
 		window.onmessage = this.receiveMessage.bind(this);
 		window.open(
-			"http://localhost:3030/oauth/github",
+			`${serverIP}3030/oauth/github`,
 			"Login with Github",
 			"height=640,width=960,toolbar=no,menubar=no,scrollbars=no,location=no,status=no"
 		);

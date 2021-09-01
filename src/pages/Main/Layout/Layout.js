@@ -1,7 +1,15 @@
 import React, { Component } from "react";
+import { withStyles } from "@material-ui/core/styles";
+
 import Navbar from "../../../Components/Navbar/Navbar";
 
-export default class Layout extends Component {
+const styles = (theme) => ({
+	root: {
+		backgroundColor: "#263238",
+	},
+});
+
+class Layout extends Component {
 	componentDidMount() {
 		window.history.pushState(null, document.title, window.location.href);
 		window.addEventListener("popstate", function (event) {
@@ -9,11 +17,14 @@ export default class Layout extends Component {
 		});
 	}
 	render() {
+		const { classes } = this.props;
 		return (
-			<div>
+			<div className={classes.root}>
 				<Navbar />
 				<main>{this.props.children}</main>
 			</div>
 		);
 	}
 }
+
+export default withStyles(styles)(Layout);

@@ -45,6 +45,14 @@ const styles = (theme) => ({
 		margin: theme.spacing(3, "auto", 0, "auto"),
 		maxWidth: "150px",
 		display: "flex",
+		color: "white",
+		backgroundColor: "#263238",
+		"&:hover": {
+			backgroundColor: "#1f292e",
+		},
+		"&:active": {
+			backgroundColor: "#1f292e",
+		},
 	},
 	changer: {
 		color: "white",
@@ -137,22 +145,25 @@ class Main extends Component {
 			} else return;
 		});
 
-		socket.on("joinMessage", ({ joined, ownerId, roomId }) => {
+		socket.on("joinMessage", ({ joined, userId, ownerId, roomId }) => {
 			if (joined) {
-				if (this.props.userId === ownerId) {
-					this.props.history.push(`/main/${roomId}/admin`);
-				} else {
-					this.props.history.push(`/main/${roomId}`);
+				if (this.props.userId === userId) {
+					if (this.props.userId === ownerId) {
+						this.props.history.replace(`/main/${roomId}/admin`);
+					} else {
+						this.props.history.replace(`/main/${roomId}`);
+					}
 				}
 			}
 		});
 	}
 
 	joinRoomHandler = (roomId, ownerId) => {
-		const { username, userId } = this.props;
+		const { username, userId, avatar } = this.props;
 		socket.emit("joinRoom", {
 			username,
 			userId,
+			avatar,
 			roomId,
 			ownerId,
 		});
@@ -174,10 +185,11 @@ class Main extends Component {
 				})
 				.then((res) => {
 					//!Redirect to room's page
-					const { username, userId } = this.props;
+					const { username, userId, avatar } = this.props;
 					socket.emit("joinRoom", {
 						username,
 						userId,
+						avatar,
 						roomId: res._id,
 						ownerId: res.owner.owner_id,
 					});

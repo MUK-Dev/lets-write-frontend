@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import clsx from "clsx";
 import { makeStyles } from "@material-ui/core/styles";
 import {
@@ -8,9 +8,12 @@ import {
 	Typography,
 	IconButton,
 	Badge,
+	Button,
 } from "@material-ui/core";
 import { ChevronLeft, Menu, Notifications } from "@material-ui/icons";
 import { connect } from "react-redux";
+import { useHistory, useParams } from "react-router-dom";
+import { socket } from "../../feathers-client";
 
 const drawerWidth = 240;
 
@@ -57,10 +60,13 @@ const useStyles = makeStyles((theme) => ({
 		position: "relative",
 		whiteSpace: "nowrap",
 		width: drawerWidth,
+		padding: "0 20px",
 		transition: theme.transitions.create("width", {
 			easing: theme.transitions.easing.sharp,
 			duration: theme.transitions.duration.enteringScreen,
 		}),
+		color: "white",
+		backgroundColor: "#263238",
 	},
 	drawerPaperClose: {
 		overflowX: "hidden",
@@ -90,16 +96,52 @@ const useStyles = makeStyles((theme) => ({
 	username: {
 		textAlign: "center",
 	},
+	submit: {
+		margin: "20px auto",
+		color: "white",
+		backgroundColor: "#37474f",
+		"&:hover": {
+			backgroundColor: "#1f292e",
+		},
+		"&:active": {
+			backgroundColor: "#1f292e",
+		},
+	},
 }));
 
 const Navbar = (props) => {
 	const classes = useStyles();
+
+	const history = useHistory();
+
+	const { id } = useParams();
+
 	const [open, setOpen] = React.useState(false);
+
+	useEffect(() => {
+		socket.on("leaveMessage", ({ joined, userId }) => {
+			if (!joined) {
+				if (userId === props.userId) {
+					history.replace("/main");
+				}
+			}
+		});
+	}, [history, props.userId]);
+
 	const handleDrawerOpen = () => {
 		setOpen(true);
 	};
+
 	const handleDrawerClose = () => {
 		setOpen(false);
+	};
+
+	const leaveRoomHandler = () => {
+		socket.emit("leaveRoom", {
+			username: props.username,
+			userId: props.userId,
+			roomId: id,
+		});
 	};
 
 	return (
@@ -128,7 +170,9 @@ const Navbar = (props) => {
 						noWrap
 						className={classes.title}
 					>
-						Dashboard
+						{history.location.pathname.includes("/admin")
+							? "Room Admin Panel"
+							: "Student Test Portal"}
 					</Typography>
 					<IconButton color="inherit">
 						<Badge badgeContent={4} color="secondary">
@@ -142,26 +186,26 @@ const Navbar = (props) => {
 					paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
 				}}
 				open={open}
-				ModalProps={{ onBackdropClick: handleDrawerClose }}
+				onClose={handleDrawerClose}
 			>
 				<div className={classes.toolbarIcon}>
 					<IconButton onClick={handleDrawerClose}>
-						<ChevronLeft />
+						<ChevronLeft color="secondary" />
 					</IconButton>
 				</div>
 				<img src={props.avatar} alt="User Avatar" className={classes.avatar} />
 				<Typography variant="h6" className={classes.username}>
 					{props.username}
 				</Typography>
-				{/* <Button
+				<Button
 					variant="contained"
 					fullWidth
-					color="default"
+					color="secondary"
 					className={classes.submit}
-					onClick={this.logoutHandler}
+					onClick={leaveRoomHandler}
 				>
-					Logout
-				</Button> */}
+					Leave Room
+				</Button>
 			</Drawer>
 		</div>
 	);
