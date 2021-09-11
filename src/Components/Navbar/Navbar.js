@@ -1,115 +1,25 @@
 import React, { useEffect } from "react";
 import clsx from "clsx";
-import { makeStyles } from "@material-ui/core/styles";
 import {
 	Drawer,
 	AppBar,
 	Toolbar,
 	Typography,
 	IconButton,
-	Badge,
 	Button,
 } from "@material-ui/core";
-import { ChevronLeft, Menu, Notifications } from "@material-ui/icons";
+import { ChevronLeft, Menu } from "@material-ui/icons";
 import { connect } from "react-redux";
 import { useHistory, useParams } from "react-router-dom";
 import { socket } from "../../feathers-client";
 
-const drawerWidth = 240;
+import BubbleBackground from "../BubbleBackground/BubbleBackground";
+import styles from "../../Styles/Navbar-Styles";
 
-const useStyles = makeStyles((theme) => ({
-	root: {
-		display: "flex",
-	},
-	toolbar: {
-		paddingRight: 24, // keep right padding when drawer closed
-	},
-	toolbarIcon: {
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "flex-end",
-		padding: "0 8px",
-		...theme.mixins.toolbar,
-	},
-	appBar: {
-		zIndex: theme.zIndex.drawer + 1,
-		transition: theme.transitions.create(["width", "margin"], {
-			easing: theme.transitions.easing.sharp,
-			duration: theme.transitions.duration.leavingScreen,
-		}),
-		backgroundColor: "#37474f",
-	},
-	appBarShift: {
-		marginLeft: drawerWidth,
-		width: `calc(100% - ${drawerWidth}px)`,
-		transition: theme.transitions.create(["width", "margin"], {
-			easing: theme.transitions.easing.sharp,
-			duration: theme.transitions.duration.enteringScreen,
-		}),
-	},
-	menuButton: {
-		marginRight: 36,
-	},
-	menuButtonHidden: {
-		display: "none",
-	},
-	title: {
-		flexGrow: 1,
-	},
-	drawerPaper: {
-		position: "relative",
-		whiteSpace: "nowrap",
-		width: drawerWidth,
-		padding: "0 20px",
-		transition: theme.transitions.create("width", {
-			easing: theme.transitions.easing.sharp,
-			duration: theme.transitions.duration.enteringScreen,
-		}),
-		color: "white",
-		backgroundColor: "#263238",
-	},
-	drawerPaperClose: {
-		overflowX: "hidden",
-		transition: theme.transitions.create("width", {
-			easing: theme.transitions.easing.sharp,
-			duration: theme.transitions.duration.leavingScreen,
-		}),
-		width: theme.spacing(7),
-		[theme.breakpoints.up("sm")]: {
-			width: theme.spacing(9),
-		},
-	},
-	appBarSpacer: theme.mixins.toolbar,
-	paper: {
-		padding: theme.spacing(2),
-		display: "flex",
-		overflow: "auto",
-		flexDirection: "column",
-	},
-	avatar: {
-		maxHeight: "40px",
-		maxWidth: "40px",
-		borderRadius: "50%",
-		display: "flex",
-		margin: "0 auto 25px auto",
-	},
-	username: {
-		textAlign: "center",
-	},
-	submit: {
-		margin: "20px auto",
-		color: "white",
-		backgroundColor: "#37474f",
-		"&:hover": {
-			backgroundColor: "#1f292e",
-		},
-		"&:active": {
-			backgroundColor: "#1f292e",
-		},
-	},
-}));
+const useStyles = styles;
 
 const Navbar = (props) => {
+	const { user_Id, username, avatar } = props;
 	const classes = useStyles();
 
 	const history = useHistory();
@@ -121,12 +31,12 @@ const Navbar = (props) => {
 	useEffect(() => {
 		socket.on("leaveMessage", ({ joined, userId }) => {
 			if (!joined) {
-				if (userId === props.userId) {
+				if (userId === user_Id) {
 					history.replace("/main");
 				}
 			}
 		});
-	}, [history, props.userId]);
+	}, [history, user_Id]);
 
 	const handleDrawerOpen = () => {
 		setOpen(true);
@@ -138,75 +48,95 @@ const Navbar = (props) => {
 
 	const leaveRoomHandler = () => {
 		socket.emit("leaveRoom", {
-			username: props.username,
-			userId: props.userId,
+			username: username,
+			userId: user_Id,
 			roomId: id,
 		});
 	};
 
+	const appbar = (
+		<AppBar
+			position="absolute"
+			className={clsx(classes.appBar, open && classes.appBarShift)}
+		>
+			<Toolbar className={classes.toolbar}>
+				<IconButton
+					edge="start"
+					color="inherit"
+					aria-label="open drawer"
+					onClick={handleDrawerOpen}
+					className={clsx(classes.menuButton, open && classes.menuButtonHidden)}
+				>
+					<Menu />
+				</IconButton>
+				<Typography
+					component="h1"
+					variant="h6"
+					color="inherit"
+					noWrap
+					className={classes.title}
+				>
+					{history.location.pathname.includes("/admin")
+						? "Room Admin Panel"
+						: "Student Test Portal"}
+				</Typography>
+				{/* something on the side of the navbar */}
+				{/* <IconButton color="inherit">
+      <Badge badgeContent={4} color="secondary">
+        <Notifications />
+      </Badge>
+    </IconButton> */}
+			</Toolbar>
+		</AppBar>
+	);
+
+	const closeButton = (
+		<div className={classes.toolbarIcon}>
+			<IconButton onClick={handleDrawerClose}>
+				<ChevronLeft color="secondary" />
+			</IconButton>
+		</div>
+	);
+
+	const avatarImage = (
+		<img src={avatar} alt="User Avatar" className={classes.avatar} />
+	);
+
+	const leaveButton = (
+		<Button
+			variant="contained"
+			fullWidth
+			color="secondary"
+			className={classes.submit}
+			onClick={leaveRoomHandler}
+		>
+			Leave Room
+		</Button>
+	);
+
+	const drawer = (
+		<Drawer
+			classes={{
+				paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
+			}}
+			open={open}
+			onClose={handleDrawerClose}
+		>
+			{closeButton}
+
+			{avatarImage}
+			<Typography variant="h6" className={classes.username}>
+				{username}
+			</Typography>
+			{leaveButton}
+			<BubbleBackground />
+		</Drawer>
+	);
+
 	return (
 		<div>
-			<AppBar
-				position="absolute"
-				className={clsx(classes.appBar, open && classes.appBarShift)}
-			>
-				<Toolbar className={classes.toolbar}>
-					<IconButton
-						edge="start"
-						color="inherit"
-						aria-label="open drawer"
-						onClick={handleDrawerOpen}
-						className={clsx(
-							classes.menuButton,
-							open && classes.menuButtonHidden
-						)}
-					>
-						<Menu />
-					</IconButton>
-					<Typography
-						component="h1"
-						variant="h6"
-						color="inherit"
-						noWrap
-						className={classes.title}
-					>
-						{history.location.pathname.includes("/admin")
-							? "Room Admin Panel"
-							: "Student Test Portal"}
-					</Typography>
-					<IconButton color="inherit">
-						<Badge badgeContent={4} color="secondary">
-							<Notifications />
-						</Badge>
-					</IconButton>
-				</Toolbar>
-			</AppBar>
-			<Drawer
-				classes={{
-					paper: clsx(classes.drawerPaper, !open && classes.drawerPaperClose),
-				}}
-				open={open}
-				onClose={handleDrawerClose}
-			>
-				<div className={classes.toolbarIcon}>
-					<IconButton onClick={handleDrawerClose}>
-						<ChevronLeft color="secondary" />
-					</IconButton>
-				</div>
-				<img src={props.avatar} alt="User Avatar" className={classes.avatar} />
-				<Typography variant="h6" className={classes.username}>
-					{props.username}
-				</Typography>
-				<Button
-					variant="contained"
-					fullWidth
-					color="secondary"
-					className={classes.submit}
-					onClick={leaveRoomHandler}
-				>
-					Leave Room
-				</Button>
-			</Drawer>
+			{appbar}
+			{drawer}
 		</div>
 	);
 };
@@ -214,7 +144,7 @@ const Navbar = (props) => {
 const mapStateToProps = (state) => {
 	if (state.currentUser) {
 		return {
-			userId: state.currentUser._id,
+			user_Id: state.currentUser._id,
 			username: state.currentUser.name,
 			avatar: state.currentUser.avatar_url,
 		};

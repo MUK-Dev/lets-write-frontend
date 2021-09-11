@@ -10,118 +10,24 @@ import {
 	Box,
 	Button,
 } from "@material-ui/core";
-import { convertToRaw, EditorState } from "draft-js";
+import { EditorState, convertToRaw } from "draft-js";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import { connect } from "react-redux";
 
 import app from "../../../feathers-client";
 import TextEditor from "../../../Components/TextEditor/TextEditor";
 import Chatbox from "../../../Components/Chatbox/Chatbox";
-
-const styles = (theme) => ({
-	root: {
-		display: "flex",
-	},
-	appBarSpacer: theme.mixins.toolbar,
-	content: {
-		flexGrow: 1,
-		height: "100vh",
-		overflow: "auto",
-		color: "white",
-	},
-	container: {
-		paddingTop: theme.spacing(4),
-		paddingBottom: theme.spacing(4),
-	},
-	paper: {
-		padding: theme.spacing(2),
-		display: "flex",
-		flexDirection: "column",
-		backgroundColor: "#37474f",
-		color: "lightGrey",
-		overflow: "auto",
-	},
-	chatPaper: {
-		height: "85%",
-		maxHeight: "85%",
-		[theme.breakpoints.down("sm")]: {
-			height: "77%",
-			maxHeight: "77%",
-		},
-		overflow: "hidden",
-	},
-	toolbarClassName: {
-		backgroundColor: "#37474f",
-		background: "#37474f",
-		border: "none",
-		"& *": {
-			backgroundColor: "#37474f",
-			background: "#37474f",
-			border: "none",
-		},
-		"& .rdw-link-modal-input": {
-			border: "1px solid #f1f1f1",
-			color: "white",
-		},
-	},
-	wrapperClassName: {
-		wordWrap: "normal",
-		backgroundColor: "#37474f",
-		background: "#37474f !important",
-		border: "none !important",
-		height: "270px",
-		[theme.breakpoints.down("sm")]: {
-			height: "240px",
-		},
-	},
-	fixedHeight: {
-		height: "600px",
-
-		[theme.breakpoints.down("sm")]: {
-			height: "400px",
-		},
-	},
-	editorClassName: {
-		wordWrap: "normal",
-		backgroundColor: "#263238",
-		background: "#263238 !important",
-		border: "1px solid #37474f",
-		height: "100%",
-
-		overflow: "scroll",
-		[theme.breakpoints.down("sm")]: {
-			maxHeight: "100px",
-		},
-	},
-	submit: {
-		marginTop: "100px",
-		[theme.breakpoints.down("sm")]: {
-			marginTop: "15px",
-		},
-		color: "white",
-		backgroundColor: "#263238",
-		"&:hover": {
-			backgroundColor: "#1f292e",
-		},
-		"&:active": {
-			backgroundColor: "#1f292e",
-		},
-	},
-	list: {
-		width: "100%",
-	},
-});
+import styles from "../../../Styles/RoomStudent-Styles";
 
 class RoomStudent extends Component {
 	state = {
 		room: null,
 		showSpinner: false,
+		submitLoading: false,
 		editorState: EditorState.createEmpty(),
 		chatbox: "",
 		chatMessages: [],
 	};
-
-	// showHtml = React.createRef();
 
 	componentDidMount() {
 		this.setState({ showSpinner: true });
@@ -145,23 +51,45 @@ class RoomStudent extends Component {
 		});
 		app.service("rooms").on("patched", (room) => {
 			if (room._id === this.props.match.params.id) {
-				this.setState({ room: room, questionBox: room.question });
+				this.setState({ room: room, questionBox: room.questionSection });
 			}
 		});
 	}
 
 	submitAnswerHandler = () => {
-		console.log("Submit Answer event triggered");
+		this.setState({ submitLoading: true });
+		const answer = {
+			user: {
+				user_id: this.props.userId,
+				username: this.props.username,
+				avatar: this.props.avatar,
+			},
+			room: {
+				room_id: this.state.room._id,
+				question: this.state.room.question,
+			},
+			text: JSON.stringify(
+				convertToRaw(this.state.editorState.getCurrentContent())
+			),
+		};
+		app
+			.service("answers")
+			.create(answer)
+			.then((res) => {
+				this.setState({
+					submitLoading: false,
+					editorState: EditorState.createEmpty(),
+				});
+			})
+			.catch((err) => {
+				console.log(err);
+				this.setState({ submitLoading: false });
+			});
 	};
 
 	onEditorStateChange = (editorState) => {
-		// console.log(draftToHtml(convertToRaw(editorState.getCurrentContent())));
-		// this.showHtml.current.innerHTML = draftToHtml(
-		// 	convertToRaw(editorState.getCurrentContent())
-		// );
 		this.setState({
 			editorState,
-			textToShow: convertToRaw(editorState.getCurrentContent()),
 		});
 	};
 
@@ -169,14 +97,6 @@ class RoomStudent extends Component {
 		this.setState({ chatbox: event.target.value });
 	};
 	sendMessage = async () => {
-		// console.log(
-		// 	"[Send message Funciton]",
-		// 	this.props.userId,
-		// 	this.props.username,
-		// 	this.props.match.params.id,
-		// 	this.props.avatar,
-		// 	this.state.chatbox
-		// );
 		if (this.state.chatbox !== "") {
 			try {
 				await app.service("messages").create({
@@ -197,7 +117,87 @@ class RoomStudent extends Component {
 
 	render() {
 		const { classes } = this.props;
+		const {
+			chatMessages,
+			chatbox,
+			editorState,
+			room,
+			showSpinner,
+			submitLoading,
+		} = this.state;
+
 		const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+
+		const questionSection = (
+			<Grid item xs={12}>
+				<Paper className={classes.paper}>
+					<Grid
+						container
+						direction="row"
+						alignItems="center"
+						justifyContent="center"
+					>
+						{showSpinner ? (
+							<CircularProgress />
+						) : room ? (
+							<Typography>
+								<strong>Current Question:</strong> {room.question}
+							</Typography>
+						) : null}
+					</Grid>
+				</Paper>
+			</Grid>
+		);
+
+		const textEditorSection = (
+			<Grid item xs={12} md={8}>
+				<Paper className={fixedHeightPaper}>
+					<Grid
+						container
+						direction="row"
+						alignItems="center"
+						justifyContent="center"
+					>
+						{showSpinner ? (
+							<CircularProgress />
+						) : room ? (
+							<Box width="100%" height="100%">
+								<TextEditor
+									classes={classes}
+									onEditorStateChange={this.onEditorStateChange}
+									editorState={editorState}
+								/>
+							</Box>
+						) : null}
+						{submitLoading ? (
+							<CircularProgress />
+						) : (
+							<Button
+								variant="contained"
+								fullWidth
+								className={classes.submit}
+								onClick={this.submitAnswerHandler}
+							>
+								Submit Answer
+							</Button>
+						)}
+					</Grid>
+				</Paper>
+			</Grid>
+		);
+
+		const messageSection = (
+			<Grid item xs={12} md={4}>
+				<Paper className={clsx(fixedHeightPaper, classes.chatPaper)}>
+					<Chatbox
+						sendMessage={this.sendMessage}
+						messages={chatMessages}
+						value={chatbox}
+						valueChanger={this.chatboxHandler}
+					/>
+				</Paper>
+			</Grid>
+		);
 		return (
 			<main className={classes.content}>
 				<div className={classes.appBarSpacer} />
@@ -209,65 +209,11 @@ class RoomStudent extends Component {
 						justifyContent="center"
 						spacing={3}
 					>
-						<Grid item xs={12}>
-							<Paper className={classes.paper}>
-								<Grid
-									container
-									direction="row"
-									alignItems="center"
-									justifyContent="center"
-								>
-									{this.state.showSpinner ? (
-										<CircularProgress />
-									) : this.state.room ? (
-										<Typography>
-											<strong>Current Question:</strong>{" "}
-											{this.state.room.question}
-										</Typography>
-									) : null}
-								</Grid>
-							</Paper>
-						</Grid>
-						<Grid item xs={12} md={8}>
-							<Paper className={fixedHeightPaper}>
-								<Grid
-									container
-									direction="row"
-									alignItems="center"
-									justifyContent="center"
-								>
-									{this.state.showSpinner ? (
-										<CircularProgress />
-									) : this.state.room ? (
-										<Box width="100%" height="100%">
-											<TextEditor
-												classes={classes}
-												onEditorStateChange={this.onEditorStateChange}
-												editorState={this.state.editorState}
-											/>
-										</Box>
-									) : null}
-									<Button
-										variant="contained"
-										fullWidth
-										className={classes.submit}
-										onClick={this.submitAnswerHandler}
-									>
-										Submit Answer
-									</Button>
-								</Grid>
-							</Paper>
-						</Grid>
-						<Grid item xs={12} md={4}>
-							<Paper className={clsx(fixedHeightPaper, classes.chatPaper)}>
-								<Chatbox
-									sendMessage={this.sendMessage}
-									messages={this.state.chatMessages}
-									value={this.state.chatbox}
-									valueChanger={this.chatboxHandler}
-								/>
-							</Paper>
-						</Grid>
+						{questionSection}
+
+						{textEditorSection}
+
+						{messageSection}
 					</Grid>
 				</Container>
 			</main>

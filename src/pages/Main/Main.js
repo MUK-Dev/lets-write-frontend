@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Grid, Button } from "@material-ui/core";
+import { Grid, Grow } from "@material-ui/core";
 import { withStyles } from "@material-ui/core/styles";
 import { Redirect } from "react-router";
 import { connect } from "react-redux";
@@ -8,100 +8,9 @@ import RoomForm from "../../Components/RoomForm/RoomForm";
 import YourRooms from "../../Components/YourRooms/YourRooms";
 import LatestRooms from "../../Components/LatestRooms/LatestRooms";
 import app, { socket } from "../../feathers-client";
-
-const styles = (theme) => ({
-	"@global": {
-		"*::-webkit-scrollbar": {
-			width: "0.4em",
-		},
-		"*::-webkit-scrollbar-track": {
-			"-webkit-box-shadow": "inset 0 0 6px rgba(0,0,0,0.00)",
-		},
-		"*::-webkit-scrollbar-thumb": {
-			backgroundColor: "#37474f",
-			outline: "none",
-		},
-	},
-	root: {
-		backgroundColor: "#263238",
-		color: "white",
-		minHeight: "100vh",
-		width: "100%",
-		padding: "0 10px 0 0",
-	},
-	columnSearch: {
-		textAlign: "center",
-		minHeight: "10vh",
-	},
-	column: {
-		textAlign: "center",
-		minHeight: "10vh",
-	},
-	form: {
-		width: "100%", // Fix IE 11 issue.
-		marginTop: theme.spacing(1),
-	},
-	submit: {
-		margin: theme.spacing(3, "auto", 0, "auto"),
-		maxWidth: "150px",
-		display: "flex",
-		color: "white",
-		backgroundColor: "#263238",
-		"&:hover": {
-			backgroundColor: "#1f292e",
-		},
-		"&:active": {
-			backgroundColor: "#1f292e",
-		},
-	},
-	changer: {
-		color: "white",
-		backgroundColor: "#37474f",
-		margin: "5px",
-		padding: "0 10px",
-	},
-	avatar: {
-		maxHeight: "40px",
-		maxWidth: "40px",
-		borderRadius: "50%",
-		display: "flex",
-		margin: "auto",
-	},
-	username: {
-		textAlign: "center",
-	},
-	navigation: {
-		padding: "30px 10px",
-		top: "0",
-		left: "0",
-		backgroundColor: "#37474f",
-		minHeight: "100vh",
-		width: "200px",
-		position: "sticky",
-		display: "inline-block",
-		verticalAlign: "top",
-	},
-	rooms: {
-		maxHeight: "125px",
-		overflowY: "scroll",
-		[theme.breakpoints.up("md")]: {
-			marginTop: "10px",
-			maxHeight: "250px",
-		},
-	},
-	searchedRooms: {
-		maxHeight: "125px",
-		overflowY: "scroll",
-		[theme.breakpoints.up("md")]: {
-			marginTop: "10px",
-			maxHeight: "250px",
-		},
-	},
-	scrollableCol: {
-		display: "inline-block",
-		verticalAlign: "bottom",
-	},
-});
+import FloatingLoadingSpinner from "../../Components/FloatingLoadingSpinner/FloatingLoadingSpinner";
+import MainNavigation from "../../Components/MainNavigation/MainNavigation";
+import styles from "../../Styles/Main-Styles";
 
 class Main extends Component {
 	state = {
@@ -109,12 +18,14 @@ class Main extends Component {
 		name: "",
 		question: "",
 		redirect: false,
-		message: "",
 		recentRooms: [],
+		userRooms: [],
 		searchOptions: [],
+		showSpinner: false,
 	};
 
 	componentDidMount() {
+		this.setState({ showSpinner: true });
 		app
 			.service("rooms")
 			.find({
@@ -126,13 +37,28 @@ class Main extends Component {
 				},
 			})
 			.then((res) => {
+				this.setState({ showSpinner: false });
 				if (res.data.length > 0) {
 					this.setState({ recentRooms: res.data });
 				}
 			})
 			.catch((err) => {
+				this.setState({ showSpinner: false });
 				console.log(err);
 			});
+		app
+			.service("rooms")
+			.find({
+				query: {
+					"owner.owner_id": this.props.userId,
+				},
+			})
+			.then((res) => {
+				if (res.data.length > 0) {
+					this.setState({ userRooms: res.data });
+				}
+			})
+			.catch((err) => {});
 
 		app.service("rooms").on("created", (room) => {
 			const newRecentRooms = [...this.state.recentRooms];
@@ -146,6 +72,7 @@ class Main extends Component {
 		});
 
 		socket.on("joinMessage", ({ joined, userId, ownerId, roomId }) => {
+			this.setState({ showSpinner: false });
 			if (joined) {
 				if (this.props.userId === userId) {
 					if (this.props.userId === ownerId) {
@@ -159,6 +86,7 @@ class Main extends Component {
 	}
 
 	joinRoomHandler = (roomId, ownerId) => {
+		this.setState({ showSpinner: true });
 		const { username, userId, avatar } = this.props;
 		socket.emit("joinRoom", {
 			username,
@@ -171,6 +99,7 @@ class Main extends Component {
 
 	createRoomHandler = (event) => {
 		event.preventDefault();
+		this.setState({ showSpinner: true });
 		const { name, question } = this.state;
 		if (name !== "" && question !== "") {
 			app
@@ -184,7 +113,6 @@ class Main extends Component {
 					},
 				})
 				.then((res) => {
-					//!Redirect to room's page
 					const { username, userId, avatar } = this.props;
 					socket.emit("joinRoom", {
 						username,
@@ -195,6 +123,7 @@ class Main extends Component {
 					});
 				})
 				.catch((err) => {
+					this.setState({ showSpinner: false });
 					console.log(err);
 				});
 		}
@@ -203,6 +132,7 @@ class Main extends Component {
 	nameValueHandler = (event) => {
 		this.setState({ name: event.target.value });
 		if (this.state.joinRoomForm) {
+			this.setState({ showSpinner: true });
 			app
 				.service("rooms")
 				.find({
@@ -214,10 +144,10 @@ class Main extends Component {
 					},
 				})
 				.then((res) => {
-					this.setState({ searchOptions: res.data });
+					this.setState({ searchOptions: res.data, showSpinner: false });
 				})
 				.catch((err) => {
-					this.setState({ searchOptions: [] });
+					this.setState({ searchOptions: [], showSpinner: false });
 				});
 		}
 	};
@@ -227,57 +157,93 @@ class Main extends Component {
 	};
 
 	logoutHandler = async () => {
+		this.setState({ showSpinner: true });
 		await app.logout();
-		this.setState({ redirect: true });
+		this.setState({ redirect: true, showSpinner: false });
 	};
 
 	render() {
-		const { classes } = this.props;
-		if (this.state.redirect) {
+		const { classes, avatar, username } = this.props;
+		const {
+			joinRoomForm,
+			name,
+			question,
+			recentRooms,
+			redirect,
+			searchOptions,
+			showSpinner,
+			userRooms,
+		} = this.state;
+
+		const reversedRoomsArray = [].concat(recentRooms).reverse();
+
+		const sideNavigation = (
+			<MainNavigation
+				classes={classes}
+				avatar={avatar}
+				username={username}
+				logout={this.logoutHandler}
+			/>
+		);
+
+		const roomForm = (
+			<Grow in={true} timeout={1000}>
+				<Grid item xs={12} className={classes.columnSearch}>
+					<RoomForm
+						classes={classes}
+						roomVal={name}
+						joinRoom={(roomId, ownerId) =>
+							this.joinRoomHandler(roomId, ownerId)
+						}
+						questionVal={question}
+						nameChanger={this.nameValueHandler}
+						questionChanger={this.questionValueHandler}
+						searchOptions={searchOptions}
+						submitHandler={(event) => this.createRoomHandler(event)}
+						joinForm={joinRoomForm}
+						changeForm={() => {
+							this.setState({
+								joinRoomForm: !joinRoomForm,
+							});
+						}}
+					/>
+				</Grid>
+			</Grow>
+		);
+
+		const yourRooms = (
+			<Grid item xs={12} md={6} className={classes.column}>
+				<YourRooms
+					classes={classes}
+					rooms={userRooms}
+					joinRoom={(roomId, ownerId) => this.joinRoomHandler(roomId, ownerId)}
+				/>
+			</Grid>
+		);
+
+		const latestRooms = (
+			<Grid item xs={12} md={6} className={classes.column}>
+				<LatestRooms
+					classes={classes}
+					rooms={reversedRoomsArray}
+					joinRoom={(roomId, ownerId) => this.joinRoomHandler(roomId, ownerId)}
+				/>
+			</Grid>
+		);
+
+		const spinner = showSpinner ? <FloatingLoadingSpinner /> : null;
+
+		if (redirect) {
 			return <Redirect to="/" />;
 		}
-		const reversedRoomsArray = [].concat(this.state.recentRooms).reverse();
 		return (
 			<div className={classes.root}>
 				<Grid container direction="row" alignItems="flex-start">
-					<Grid item xs={3} sm={2} className={classes.navigation} elvation={5}>
-						<img
-							src={this.props.avatar}
-							alt="User Avatar"
-							className={classes.avatar}
-						/>
-						<h5 className={classes.username}>{this.props.username}</h5>
-						<Button
-							variant="contained"
-							fullWidth
-							color="default"
-							className={classes.submit}
-							onClick={this.logoutHandler}
-						>
-							Logout
-						</Button>
-					</Grid>
+					{sideNavigation}
+
 					<Grid item xs={9} sm={10} className={classes.scrollableCol}>
-						<Grid item xs={12} className={classes.columnSearch}>
-							<RoomForm
-								classes={classes}
-								roomVal={this.state.name}
-								joinRoom={(roomId, ownerId) =>
-									this.joinRoomHandler(roomId, ownerId)
-								}
-								questionVal={this.state.question}
-								nameChanger={this.nameValueHandler}
-								questionChanger={this.questionValueHandler}
-								searchOptions={this.state.searchOptions}
-								submitHandler={(event) => this.createRoomHandler(event)}
-								joinForm={this.state.joinRoomForm}
-								changeForm={() => {
-									this.setState({
-										joinRoomForm: !this.state.joinRoomForm,
-									});
-								}}
-							/>
-						</Grid>
+						{roomForm}
+
 						<Grid
 							container
 							component="main"
@@ -285,24 +251,12 @@ class Main extends Component {
 							justifyContent="space-between"
 							alignItems="center"
 						>
-							<Grid item xs={12} md={6} className={classes.column}>
-								<YourRooms
-									classes={classes}
-									joinRoom={(roomId, ownerId) =>
-										this.joinRoomHandler(roomId, ownerId)
-									}
-								/>
-							</Grid>
-							<Grid item xs={12} md={6} className={classes.column}>
-								<LatestRooms
-									classes={classes}
-									rooms={reversedRoomsArray}
-									joinRoom={(roomId, ownerId) =>
-										this.joinRoomHandler(roomId, ownerId)
-									}
-								/>
-							</Grid>
+							{yourRooms}
+
+							{latestRooms}
 						</Grid>
+
+						{spinner}
 					</Grid>
 				</Grid>
 			</div>

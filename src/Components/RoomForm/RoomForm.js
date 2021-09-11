@@ -1,10 +1,23 @@
 import React from "react";
-import { TextField, Button, Grid, Typography } from "@material-ui/core";
+import { TextField, Button, Grid, Typography, Grow } from "@material-ui/core";
 
 const RoomForm = (props) => {
-	const form = props.joinForm ? (
+	const {
+		classes,
+		joinForm,
+		roomVal,
+		nameChanger,
+		searchOptions,
+		joinRoom,
+		submitHandler,
+		changeForm,
+		questionVal,
+		questionChanger,
+	} = props;
+
+	const form = joinForm ? (
 		<div>
-			{props.joinForm ? <p>Search Rooms by name</p> : null}
+			{joinForm ? <p>Search Rooms by name</p> : null}
 
 			<TextField
 				variant="outlined"
@@ -12,10 +25,9 @@ const RoomForm = (props) => {
 				id="name"
 				label="Room Name"
 				name="room"
-				required
 				autoComplete="off"
-				value={props.roomVal}
-				onChange={props.nameChanger}
+				value={roomVal}
+				onChange={nameChanger}
 				inputProps={{
 					style: {
 						color: "white",
@@ -28,40 +40,42 @@ const RoomForm = (props) => {
 					},
 				}}
 			/>
-			<div className={props.classes.searchedRooms}>
-				{props.searchOptions.length > 0
-					? props.searchOptions.map((option) => {
+			<div className={classes.searchedRooms}>
+				{searchOptions.length > 0
+					? searchOptions.map((option) => {
 							return (
-								<Grid item xs={12} key={option._id}>
-									<Button
-										size="small"
-										className={props.classes.changer}
-										onClick={() =>
-											props.joinRoom(option._id, option.owner.owner_id)
-										}
-									>
-										<Typography
-											component={"span"}
-											style={{ fontSize: "12px", padding: "0" }}
+								<Grow in={true} key={option._id} timeout={1200}>
+									<Grid item xs={12}>
+										<Button
+											size="small"
+											className={classes.changer}
+											onClick={() =>
+												joinRoom(option._id, option.owner.owner_id)
+											}
 										>
-											<pre
-												style={{
-													fontFamily: "inherit",
-													marginTop: "0",
-													marginBottom: "0",
-												}}
+											<Typography
+												component={"span"}
+												style={{ fontSize: "12px", padding: "0" }}
 											>
-												<strong style={{ marginBottom: "25px" }}>
-													Room Owner:
-												</strong>{" "}
-												{option.owner.name}
-												<br />
-												<strong>Room Name:</strong> {option.name}
-											</pre>
-											<strong>Question:</strong> {option.question}
-										</Typography>
-									</Button>
-								</Grid>
+												<pre
+													style={{
+														fontFamily: "inherit",
+														marginTop: "0",
+														marginBottom: "0",
+													}}
+												>
+													<strong style={{ marginBottom: "25px" }}>
+														Room Owner:
+													</strong>{" "}
+													{option.owner.name}
+													<br />
+													<strong>Room Name:</strong> {option.name}
+												</pre>
+												<strong>Question:</strong> {option.question}
+											</Typography>
+										</Button>
+									</Grid>
+								</Grow>
 							);
 					  })
 					: null}
@@ -78,8 +92,8 @@ const RoomForm = (props) => {
 					name="room"
 					required
 					autoComplete="off"
-					value={props.roomVal}
-					onChange={props.nameChanger}
+					value={roomVal}
+					onChange={nameChanger}
 					inputProps={{
 						style: {
 							color: "white",
@@ -102,8 +116,8 @@ const RoomForm = (props) => {
 					autoComplete="off"
 					label="Question"
 					name="question"
-					value={props.questionVal}
-					onChange={props.questionChanger}
+					value={questionVal}
+					onChange={questionChanger}
 					inputProps={{
 						style: {
 							color: "white",
@@ -121,29 +135,34 @@ const RoomForm = (props) => {
 	);
 	return (
 		<div>
-			<form onSubmit={props.submitHandler}>
+			<form onSubmit={submitHandler}>
 				<Grid container direction="column">
 					{form}
 				</Grid>
+
 				<Grid container direction="column" alignItems="center">
-					<Button
-						size="small"
-						onClick={props.changeForm}
-						style={{ color: "white" }}
-					>
-						{props.joinForm ? "Create Room Instead?" : "Join Room Instead?"}
-					</Button>
+					<Grow in={true} timeout={1000}>
+						<Button
+							size="small"
+							onClick={changeForm}
+							style={{ color: "white" }}
+						>
+							{joinForm ? "Create Room Instead?" : "Join Room Instead?"}
+						</Button>
+					</Grow>
 				</Grid>
 				<Grid container direction="column" alignItems="center">
-					{props.joinForm ? null : (
-						<Button
-							type="submit"
-							variant="contained"
-							color="default"
-							className={props.classes.submit}
-						>
-							<b>Create Room</b>
-						</Button>
+					{joinForm ? null : (
+						<Grow in={true} timeout={1000}>
+							<Button
+								type="submit"
+								variant="contained"
+								color="default"
+								className={classes.submit}
+							>
+								<b>Create Room</b>
+							</Button>
+						</Grow>
 					)}
 				</Grid>
 			</form>

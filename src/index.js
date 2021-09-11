@@ -13,29 +13,30 @@ import Signup from "./pages/Signup/Signup";
 import Layout from "./pages/Main/Layout/Layout";
 import RoomAdmin from "./pages/Main/RoomAdmin/RoomAdmin";
 import RoomStudent from "./pages/Main/RoomStudent/RoomStudent";
+import Error404 from "./pages/Error404/Error404";
 
 ReactDOM.render(
 	<Provider store={store}>
-		<React.StrictMode>
-			<BrowserRouter>
+		<BrowserRouter>
+			<Switch>
 				<App>
-					<Route path="/" exact component={Signup} />
-					<Route path="/main" exact component={Main} />
-					<Route path="/main/:id">
-						<Layout>
-							<Switch>
-								<Route exact path="/main/:id/admin" component={RoomAdmin} />
+					<Switch>
+						<Route path="/" exact component={Signup} />
+						<Route path="/main" exact component={Main} />
+						<Route path="/main/:id">
+							<Layout>
+								<Switch>
+									<Route exact path="/main/:id/admin" component={RoomAdmin} />
 
-								<Route path="/main/:id" exact component={RoomStudent} />
-							</Switch>
-						</Layout>
-					</Route>
-					{/* //!Add Route for unknown route
-					<Route />
-					//!=========================== */}
+									<Route path="/main/:id" exact component={RoomStudent} />
+								</Switch>
+							</Layout>
+						</Route>
+						<Route component={Error404} />
+					</Switch>
 				</App>
-			</BrowserRouter>
-		</React.StrictMode>
+			</Switch>
+		</BrowserRouter>
 	</Provider>,
 	document.getElementById("root")
 );

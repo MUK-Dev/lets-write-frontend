@@ -5,26 +5,38 @@ import TextField from "@material-ui/core/TextField";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
 import Grid from "@material-ui/core/Grid";
+import Grow from "@material-ui/core/Grow";
 
 const SignupForm = (props) => {
+	const {
+		classes,
+		pageType,
+		registerSubmitHandler,
+		loginSubmitHandler,
+		nameVal,
+		nameChanger,
+		emailVal,
+		emailChanger,
+		passVal,
+		passwordChanger,
+		changePage,
+	} = props;
 	return (
 		<div>
-			<div className={props.classes.paper}>
-				<Avatar className={props.classes.avatar}>
-					<LockOutlinedIcon />
-				</Avatar>
+			<div className={classes.paper}>
+				<Grow in timeout={1500}>
+					<Avatar className={classes.avatar}>
+						<LockOutlinedIcon />
+					</Avatar>
+				</Grow>
 				<Typography component="h1" variant="h5">
-					{props.pageType ? "Register" : "Login"}
+					{pageType ? "Register" : "Login"}
 				</Typography>
 				<form
-					className={props.classes.form}
-					onSubmit={
-						props.pageType
-							? props.registerSubmitHandler
-							: props.loginSubmitHandler
-					}
+					className={classes.form}
+					onSubmit={pageType ? registerSubmitHandler : loginSubmitHandler}
 				>
-					{props.pageType ? (
+					{pageType ? (
 						<TextField
 							variant="outlined"
 							margin="normal"
@@ -35,8 +47,8 @@ const SignupForm = (props) => {
 							name="name"
 							autoComplete="name"
 							autoFocus
-							value={props.nameVal}
-							onChange={props.nameChanger}
+							value={nameVal}
+							onChange={nameChanger}
 						/>
 					) : null}
 
@@ -50,8 +62,8 @@ const SignupForm = (props) => {
 						name="email"
 						autoComplete="email"
 						autoFocus
-						value={props.emailVal}
-						onChange={props.emailChanger}
+						value={emailVal}
+						onChange={emailChanger}
 					/>
 
 					<TextField
@@ -64,15 +76,13 @@ const SignupForm = (props) => {
 						type="password"
 						id="password"
 						autoComplete="current-password"
-						value={props.passVal}
-						onChange={props.passwordChanger}
+						value={passVal}
+						onChange={passwordChanger}
 					/>
 
 					<Grid item>
-						<Button size="small" onClick={props.changePage}>
-							{props.pageType
-								? "Login Instead?"
-								: "Don't have an account? Sign Up"}
+						<Button size="small" onClick={changePage}>
+							{pageType ? "Login Instead?" : "Don't have an account? Sign Up"}
 						</Button>
 					</Grid>
 
@@ -81,9 +91,9 @@ const SignupForm = (props) => {
 						fullWidth
 						variant="contained"
 						color="default"
-						className={props.classes.submit}
+						className={classes.submit}
 					>
-						{props.pageType ? "Register" : "Login"}
+						{pageType ? "Register" : "Login"}
 					</Button>
 				</form>
 			</div>

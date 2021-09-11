@@ -1,33 +1,45 @@
 import React from "react";
-import { Box, Button, Grid, Typography } from "@material-ui/core";
+import { Box, Button, Grid, Typography, Grow } from "@material-ui/core";
 
 const LatestRooms = (props) => {
+	const { classes, rooms, joinRoom } = props;
 	return (
 		<div>
-			<h4>Latest Rooms</h4>
-			<div className={props.classes.rooms}>
-				{props.rooms.length === 0 ? (
-					<p>No Recent Rooms</p>
+			<Grow in={true} timeout={1000}>
+				<h4>Latest Rooms</h4>
+			</Grow>
+			<div className={classes.rooms}>
+				{rooms.length === 0 ? (
+					<Grow in={true} timeout={1500}>
+						<p>No Recent Rooms</p>
+					</Grow>
 				) : (
-					props.rooms.slice(0, 10).map((room) => {
+					rooms.slice(0, 10).map((room) => {
 						return (
-							<Grid item xs={12} key={room._id}>
-								<Button
-									size="small"
-									className={props.classes.changer}
-									onClick={() => props.joinRoom(room._id, room.owner.owner_id)}
-								>
-									<Typography
-										component={"span"}
-										style={{ fontSize: "12px", padding: "0" }}
+							<Grow
+								in={true}
+								timeout={1500}
+								key={room._id}
+								disableStrictModeCompat
+							>
+								<Grid item xs={12}>
+									<Button
+										size="small"
+										className={classes.changer}
+										onClick={() => joinRoom(room._id, room.owner.owner_id)}
 									>
-										<pre style={{ fontFamily: "inherit", marginTop: "0" }}>
-											<strong>Room Name:</strong> {room.name}
-										</pre>
-										<strong>Question:</strong> {room.question}
-									</Typography>
-								</Button>
-							</Grid>
+										<Typography
+											component={"span"}
+											style={{ fontSize: "12px", padding: "0" }}
+										>
+											<pre style={{ fontFamily: "inherit", marginTop: "0" }}>
+												<strong>Room Name:</strong> {room.name}
+											</pre>
+											<strong>Question:</strong> {room.question}
+										</Typography>
+									</Button>
+								</Grid>
+							</Grow>
 						);
 					})
 				)}

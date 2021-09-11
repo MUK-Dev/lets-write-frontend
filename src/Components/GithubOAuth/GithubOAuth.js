@@ -1,16 +1,17 @@
+import React from "react";
 import Button from "@material-ui/core/Button";
 import GithubIcon from "@material-ui/icons/GitHub";
-import React from "react";
 
 const GithubOAuth = (props) => {
+	const { submitHandler, classes } = props;
 	return (
-		<form onSubmit={props.submitHandler} className={props.classes.githubButton}>
+		<form onSubmit={submitHandler} className={classes.githubButton}>
 			<Button
 				type="submit"
 				fullWidth
 				variant="contained"
 				color="default"
-				className={props.classes.submit}
+				className={classes.submit}
 				startIcon={<GithubIcon />}
 			>
 				Signup with Github

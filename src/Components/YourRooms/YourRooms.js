@@ -1,55 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { Box, Button, Grid, Typography } from "@material-ui/core";
+import React from "react";
+import { Box, Button, Grid, Typography, Grow } from "@material-ui/core";
 import { connect } from "react-redux";
 
-import app from "../../feathers-client";
-
 const YourRooms = (props) => {
-	const [rooms, getRooms] = useState([]);
-	useEffect(() => {
-		app
-			.service("rooms")
-			.find({
-				query: {
-					"owner.owner_id": props.userId,
-				},
-			})
-			.then((res) => {
-				if (res.data.length > 0) {
-					getRooms(res.data);
-				} else {
-					getRooms("No Rooms Yet");
-				}
-			})
-			.catch((err) => {});
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	const { classes, rooms, joinRoom } = props;
+
 	return (
 		<div>
-			<h4>Your Rooms</h4>
-			<div className={props.classes.rooms}>
-				{typeof rooms === "string" ? (
-					<p>{rooms}</p>
+			<Grow in={true} timeout={1000}>
+				<h4>Your Rooms</h4>
+			</Grow>
+			<div className={classes.rooms}>
+				{rooms.length === 0 ? (
+					<Box>
+						<Grow in={true} timeout={1500}>
+							<Typography variant="body2">
+								You Haven't Made Any Rooms Yet
+							</Typography>
+						</Grow>
+						<br />
+						<br />
+						<Grow in={true} timeout={1500}>
+							<Typography variant="body2">
+								Click The <b>CREATE ROOM INSTEAD?</b> Buttom On the Top
+							</Typography>
+						</Grow>
+					</Box>
 				) : (
 					rooms.map((room) => {
 						return (
-							<Grid item xs={12} key={room._id}>
-								<Button
-									size="small"
-									className={props.classes.changer}
-									onClick={() => props.joinRoom(room._id, room.owner.owner_id)}
-								>
-									<Typography
-										component={"span"}
-										style={{ fontSize: "12px", padding: "0" }}
+							<Grow
+								key={room._id}
+								in={true}
+								timeout={1500}
+								disableStrictModeCompat
+							>
+								<Grid item xs={12}>
+									<Button
+										size="small"
+										className={classes.changer}
+										onClick={() => joinRoom(room._id, room.owner.owner_id)}
 									>
-										<pre style={{ fontFamily: "inherit", marginTop: "0" }}>
-											<strong>Room Name:</strong> {room.name}
-										</pre>
-										<strong>Question:</strong> {room.question}
-									</Typography>
-								</Button>
-							</Grid>
+										<Typography
+											component={"span"}
+											style={{ fontSize: "12px", padding: "0" }}
+										>
+											<pre style={{ fontFamily: "inherit", marginTop: "0" }}>
+												<strong>Room Name:</strong> {room.name}
+											</pre>
+											<strong>Question:</strong> {room.question}
+										</Typography>
+									</Button>
+								</Grid>
+							</Grow>
 						);
 					})
 				)}

@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
 	Grid,
 	TextField,
@@ -6,59 +6,24 @@ import {
 	List,
 	Typography,
 } from "@material-ui/core";
-import { makeStyles } from "@material-ui/core/styles";
 import { Send } from "@material-ui/icons";
 
 import Message from "./Message/Message";
+import styles from "../../Styles/Chatbox-Styles";
 
-const useStyles = makeStyles((theme) => ({
-	chatbox: {
-		width: "100%",
-		height: "520px",
-
-		[theme.breakpoints.down("sm")]: {
-			height: "320px",
-		},
-		"& *": {
-			color: "white",
-		},
-		overflow: "scroll",
-	},
-	list: {
-		overflow: "scroll",
-	},
-	chatMessage: {
-		backgroundColor: "#263238",
-		borderRadius: "25px",
-		margin: "5px",
-	},
-	small: {
-		width: theme.spacing(4),
-		height: theme.spacing(4),
-	},
-	textfield: {
-		width: "85%",
-		color: "white",
-		[theme.breakpoints.down("md")]: {
-			width: "80%",
-		},
-		[theme.breakpoints.down("sm")]: {
-			width: "85%",
-		},
-	},
-}));
+const useStyles = styles;
 
 const Chatbox = (props) => {
-	const chatScroll = useRef();
+	const { messages, value, valueChanger, sendMessage } = props;
 
-	const reversedMessagesArray = [].concat(props.messages).reverse();
+	const reversedMessagesArray = [].concat(messages).reverse();
 
 	const classes = useStyles();
 	return (
 		<Grid container direction="column">
 			<Grid item className={classes.chatbox}>
-				<List ref={chatScroll} className={classes.list}>
-					{props.messages.length > 0 ? (
+				<List className={classes.list}>
+					{messages.length > 0 ? (
 						reversedMessagesArray.map((m) => {
 							return (
 								<div key={m._id}>
@@ -83,19 +48,15 @@ const Chatbox = (props) => {
 					className={classes.textfield}
 					color="primary"
 					required
-					value={props.value}
-					onChange={props.valueChanger}
+					value={value}
+					onChange={valueChanger}
 					inputProps={{
 						style: {
 							color: "white",
 						},
 					}}
 				/>
-				<IconButton
-					color="inherit"
-					aria-label="Send"
-					onClick={props.sendMessage}
-				>
+				<IconButton color="inherit" aria-label="Send" onClick={sendMessage}>
 					<Send />
 				</IconButton>
 			</Grid>

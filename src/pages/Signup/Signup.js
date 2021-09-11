@@ -1,57 +1,19 @@
 import React, { Component } from "react";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
+
+import { Typography, Fade, Grid, Paper, CssBaseline } from "@material-ui/core";
+
 import { withStyles } from "@material-ui/core/styles";
 import { Redirect } from "react-router";
 import { connect } from "react-redux";
 import * as actionTypes from "../../reducers/actions";
 
 import SignupForm from "../../Components/SignupForm/SignupForm";
-import SideImage from "../../assets/sampleimg3.jpg";
 import GithubOAuth from "../../Components/GithubOAuth/GithubOAuth";
 import app from "../../feathers-client";
 import serverIP from "../../serverIP";
-
-const styles = (theme) => ({
-	root: {
-		height: "100vh",
-	},
-	image: {
-		backgroundImage: `url(${SideImage})`,
-		backgroundRepeat: "no-repeat",
-		backgroundColor:
-			theme.palette.type === "light"
-				? theme.palette.grey[50]
-				: theme.palette.grey[900],
-		backgroundSize: "cover",
-		backgroundPosition: "center",
-	},
-	paper: {
-		margin: theme.spacing(5, 4, 0, 4),
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "center",
-		transition: "height 1s linear",
-	},
-	githubButton: {
-		margin: theme.spacing(2, 4),
-		display: "flex",
-		flexDirection: "column",
-		alignItems: "center",
-	},
-	avatar: {
-		margin: theme.spacing(1),
-		backgroundColor: theme.palette.default,
-	},
-	form: {
-		width: "100%", // Fix IE 11 issue.
-		marginTop: theme.spacing(1),
-	},
-	submit: {
-		margin: theme.spacing(3, 0, 0, 0),
-	},
-});
+import FloatingLoadingSpinner from "../../Components/FloatingLoadingSpinner/FloatingLoadingSpinner";
+import AnimatedSignBoard from "../../Components/AnimatedSignBoard/AnimatedSignBoard";
+import styles from "../../Styles/Signup-Styles";
 
 class Signup extends Component {
 	state = {
@@ -61,12 +23,13 @@ class Signup extends Component {
 		name: "",
 		registerPage: false,
 		errorMessage: "",
+		showSpinner: false,
 	};
 
 	loginSubmitHandler = (event) => {
 		event.preventDefault();
-		//!Signup user from here from feathers api
 		if (this.state.email !== "" && this.state.password !== "") {
+			this.setState({ showSpinner: true });
 			const credentials = {
 				email: this.state.email,
 				password: this.state.password,
@@ -78,28 +41,34 @@ class Signup extends Component {
 				})
 				.then((res) => {
 					this.props.getUser(res.user, res.accessToken);
-					this.setState({ redirect: true });
+					this.setState({ redirect: true, showSpinner: false });
 				})
 				.catch((err) => {
-					this.setState({ errorMessage: "Couldn't Login" });
+					console.log(err);
+					this.setState({ errorMessage: err.message, showSpinner: false });
 				});
 		}
 	};
 
 	registerSubmitHandler = async (event) => {
 		event.preventDefault();
-		//!Signup user from here from feathers api
 		if (
 			this.state.email !== "" &&
 			this.state.password !== "" &&
 			this.state.name !== ""
 		) {
+			this.setState({ showSpinner: true });
 			const credentials = {
 				name: this.state.name,
 				email: this.state.email,
 				password: this.state.password,
 			};
-			await app.service("users").create(credentials);
+			try {
+				await app.service("users").create(credentials);
+			} catch (err) {
+				this.setState({ errorMessage: err.message, showSpinner: false });
+				return;
+			}
 			app
 				.authenticate({
 					strategy: "local",
@@ -107,16 +76,21 @@ class Signup extends Component {
 				})
 				.then((res) => {
 					this.props.getUser(res.user, res.accessToken);
-					this.setState({ redirect: true });
+					this.setState({ redirect: true, showSpinner: false });
 				})
 				.catch((err) => {
-					this.setState({ errorMessage: "Couldn't Register" });
+					console.log(err);
+					this.setState({
+						errorMessage: err.message,
+						showSpinner: false,
+					});
 				});
 		}
 	};
 
 	receiveMessage(event) {
 		if (event.origin === `${serverIP}3030`) {
+			console.log("[should login here]");
 			app
 				.authenticate({
 					strategy: "jwt",
@@ -124,18 +98,17 @@ class Signup extends Component {
 				})
 				.then((res) => {
 					this.props.getUser(res.user, res.accessToken);
-					this.setState({ redirect: true });
+					this.setState({ redirect: true, showSpinner: false });
 				})
 				.catch((err) => {
-					this.setState({ errorMessage: "Couldn't Login" });
+					this.setState({ errorMessage: err.message, showSpinner: false });
 				});
 		}
 	}
 
-	githubSubmitHandler = async (event) => {
+	githubSubmitHandler = (event) => {
 		event.preventDefault();
-		//!Signup user from here from feathers api
-
+		this.setState({ showSpinner: true });
 		window.onmessage = this.receiveMessage.bind(this);
 		window.open(
 			`${serverIP}3030/oauth/github`,
@@ -159,46 +132,65 @@ class Signup extends Component {
 
 	render() {
 		const { classes } = this.props;
+		const {
+			email,
+			errorMessage,
+			name,
+			password,
+			redirect,
+			registerPage,
+			showSpinner,
+		} = this.state;
 
-		if (this.state.redirect) {
+		if (redirect) {
 			return <Redirect to="/main" />;
 		}
+
+		const image = (
+			<Fade in timeout={1500}>
+				<Grid item xs={false} sm={4} md={7} className={classes.image} />
+			</Fade>
+		);
+		const form = (
+			<Fade in timeout={700}>
+				<Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+					<SignupForm
+						classes={classes}
+						loginSubmitHandler={this.loginSubmitHandler}
+						registerSubmitHandler={this.registerSubmitHandler}
+						emailVal={email}
+						passVal={password}
+						nameVal={name}
+						emailChanger={(event) => this.emailValueHandler(event)}
+						nameChanger={(event) => this.nameValueHandler(event)}
+						passwordChanger={(event) => this.passwordValueHandler(event)}
+						pageType={registerPage}
+						changePage={this.switchPage}
+					/>
+					<Typography component="h2" className={classes.errorMessage}>
+						{errorMessage !== "" ? errorMessage : null}
+					</Typography>
+					<GithubOAuth
+						classes={classes}
+						submitHandler={this.githubSubmitHandler}
+					/>
+					<AnimatedSignBoard />
+				</Grid>
+			</Fade>
+		);
+		const spinner = showSpinner ? <FloatingLoadingSpinner /> : null;
+
 		return (
 			<div>
 				<Grid container component="main" className={classes.root}>
 					<CssBaseline />
-					<Grid item xs={false} sm={4} md={7} className={classes.image} />
-					<Grid
-						item
-						xs={12}
-						sm={8}
-						md={5}
-						component={Paper}
-						elevation={6}
-						square
-					>
-						<SignupForm
-							classes={classes}
-							loginSubmitHandler={this.loginSubmitHandler}
-							registerSubmitHandler={this.registerSubmitHandler}
-							emailVal={this.state.email}
-							passVal={this.state.password}
-							nameVal={this.state.name}
-							emailChanger={(event) => this.emailValueHandler(event)}
-							nameChanger={(event) => this.nameValueHandler(event)}
-							passwordChanger={(event) => this.passwordValueHandler(event)}
-							pageType={this.state.registerPage}
-							changePage={this.switchPage}
-						/>
-						<h3 style={{ textAlign: "center" }}>
-							{this.state.errorMessage !== "" ? this.state.errorMessage : null}
-						</h3>
-						<GithubOAuth
-							classes={classes}
-							submitHandler={this.githubSubmitHandler}
-						/>
-					</Grid>
+
+					{image}
+
+					{form}
 				</Grid>
+
+				{spinner}
 			</div>
 		);
 	}

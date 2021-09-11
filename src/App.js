@@ -7,9 +7,16 @@ import * as actionTypes from "./reducers/actions";
 class App extends Component {
 	state = {
 		redirect: false,
+		error: false,
 	};
 
 	componentDidMount() {
+		if (
+			this.props.location.pathname !== "/" &&
+			this.props.location.pathname !== "/main"
+		) {
+			return this.setState({ error: true });
+		}
 		app
 			.authenticate()
 			.then((res) => {
@@ -31,6 +38,7 @@ class App extends Component {
 	render() {
 		return (
 			<div>
+				{this.state.error ? <Redirect to="/error" /> : null}
 				{this.state.redirect ? <Redirect to="/main" /> : <Redirect to="/" />}
 				<main>{this.props.children}</main>
 			</div>

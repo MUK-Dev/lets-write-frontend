@@ -4,17 +4,20 @@ import {
 	ListItemAvatar,
 	Avatar,
 	ListItemText,
+	Grow,
 } from "@material-ui/core";
 
 const Message = (props) => {
-	const { classes } = props;
+	const { classes, avatar, username, message } = props;
 	return (
 		<div>
 			<ListItem className={classes.chatMessage}>
 				<ListItemAvatar>
-					<Avatar src={props.avatar} alt="User Pic" className={classes.small} />
+					<Grow in timeout={1000}>
+						<Avatar src={avatar} alt="User Pic" className={classes.small} />
+					</Grow>
 				</ListItemAvatar>
-				<ListItemText primary={props.username} secondary={props.message} />
+				<ListItemText primary={username} secondary={message} />
 			</ListItem>
 		</div>
 	);

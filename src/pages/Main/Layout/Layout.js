@@ -2,12 +2,7 @@ import React, { Component } from "react";
 import { withStyles } from "@material-ui/core/styles";
 
 import Navbar from "../../../Components/Navbar/Navbar";
-
-const styles = (theme) => ({
-	root: {
-		backgroundColor: "#263238",
-	},
-});
+import styles from "../../../Styles/Layout-Styles";
 
 class Layout extends Component {
 	componentDidMount() {
@@ -17,11 +12,11 @@ class Layout extends Component {
 		});
 	}
 	render() {
-		const { classes } = this.props;
+		const { classes, children } = this.props;
 		return (
 			<div className={classes.root}>
 				<Navbar />
-				<main>{this.props.children}</main>
+				<main>{children}</main>
 			</div>
 		);
 	}
