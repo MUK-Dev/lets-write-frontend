@@ -8,13 +8,13 @@
 - Add animations
 - [Student] Student can submit answer
 - [Teacher] Answer is displayed in real time with text formatting
+- Refactor Code
+- [Teacher] Can Grade answers from A+ to F-
 
 ### Un Finished
 
-- Refactor Code {Active}
+- Once answer is graded send an email to the student {Active}
 - [Teacher] Form for admin to change the time for the quiz
 - [Student] Answer can only be submitted if timer is on
-- [Teacher] Can Grade answers from A+ to F-
 - [Teacher] Can start the quiz and pause it
-- [Teacher] Can check answers if they are correct or not
 - Password min length and max length with joi

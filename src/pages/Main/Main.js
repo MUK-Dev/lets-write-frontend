@@ -109,6 +109,7 @@ class Main extends Component {
 					question,
 					owner: {
 						owner_id: this.props.userId,
+						email: this.props.email,
 						name: this.props.username,
 					},
 				})
@@ -270,6 +271,7 @@ const mapStateToProps = (state) => {
 			userId: state.currentUser._id,
 			username: state.currentUser.name,
 			avatar: state.currentUser.avatar_url,
+			email: state.currentUser.email,
 		};
 	}
 };

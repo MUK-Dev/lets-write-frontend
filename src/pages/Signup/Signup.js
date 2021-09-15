@@ -69,7 +69,7 @@ class Signup extends Component {
 				this.setState({ errorMessage: err.message, showSpinner: false });
 				return;
 			}
-			app
+			await app
 				.authenticate({
 					strategy: "local",
 					...credentials,

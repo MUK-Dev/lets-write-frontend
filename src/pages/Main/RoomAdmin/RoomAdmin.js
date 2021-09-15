@@ -109,8 +109,8 @@ class RoomAdmin extends Component {
 			newActiveUsers.push(user);
 			this.setState({ activeUsers: newActiveUsers });
 		});
-		socket.on("onlineUsersSection", (onlineUsersSection) => {
-			this.setState({ activeUsers: onlineUsersSection });
+		socket.on("onlineUsers", (onlineUsers) => {
+			this.setState({ activeUsers: onlineUsers });
 		});
 		socket.emit("getOnlineUsers", this.props.match.params.id);
 	}
@@ -153,6 +153,22 @@ class RoomAdmin extends Component {
 				console.log(err);
 			}
 		}
+	};
+
+	gradeQuestionHandler = (id, grade) => {
+		app
+			.service("answers")
+			.patch(id, {
+				$set: {
+					grade: grade,
+				},
+			})
+			.then((res) => {
+				console.log(res);
+				const a = this.state.answers.filter((answer) => !(answer._id === id));
+				this.setState({ answers: a });
+			})
+			.catch((err) => console.log(err));
 	};
 
 	render() {
@@ -221,22 +237,29 @@ class RoomAdmin extends Component {
 			</Grid>
 		);
 
+		const reversedAnswers = [].concat(answers).reverse();
 		const submittedAnswersSection = (
 			<Grid item xs={12} md={8}>
 				<Paper className={fixedHeightPaperTwo}>
 					<Grid container direction="column" alignItems="stretch">
 						{answers.length > 0 ? (
-							answers.map((answer) => {
-								return (
-									<div key={answer._id}>
-										<Answer
-											classes={classes}
-											username={answer.user.username}
-											avatar={answer.user.avatar}
-											text={draftToHtml(JSON.parse(answer.text))}
-										/>
-									</div>
-								);
+							reversedAnswers.map((answer) => {
+								if (!answer.grade) {
+									return (
+										<div key={answer._id}>
+											<Answer
+												classes={classes}
+												username={answer.user.username}
+												avatar={answer.user.avatar}
+												text={draftToHtml(JSON.parse(answer.text))}
+												gradeAnswerHandler={(grade) =>
+													this.gradeQuestionHandler(answer._id, grade)
+												}
+											/>
+										</div>
+									);
+								}
+								return null;
 							})
 						) : (
 							<Typography align="center">

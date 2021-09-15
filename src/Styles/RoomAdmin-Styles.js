@@ -63,6 +63,12 @@ const styles = (theme) => ({
 			color: "white",
 		},
 	},
+	grade: {
+		display: "flex",
+		flexDirection: "row",
+		width: "76px",
+		margin: "2px",
+	},
 });
 
 export default styles;

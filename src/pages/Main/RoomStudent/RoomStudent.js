@@ -63,9 +63,11 @@ class RoomStudent extends Component {
 				user_id: this.props.userId,
 				username: this.props.username,
 				avatar: this.props.avatar,
+				email: this.props.email,
 			},
 			room: {
 				room_id: this.state.room._id,
+				room_owner_email: this.state.room.owner.email,
 				question: this.state.room.question,
 			},
 			text: JSON.stringify(
@@ -227,6 +229,7 @@ const mapStateToProps = (state) => {
 			userId: state.currentUser._id,
 			username: state.currentUser.name,
 			avatar: state.currentUser.avatar_url,
+			email: state.currentUser.email,
 		};
 	}
 };
